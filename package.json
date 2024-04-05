@@ -4,13 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "pm2 start app.js --name assignment"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.20.2",
     "config": "^3.3.11",
+    "cors": "^2.8.5",
+    "experss": "^0.0.1-security",
     "express": "^4.19.2",
-    "mongoose": "^8.3.0"
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.5.0",
+    "mongoose": "^8.3.0",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^9.0.1"
   }
 }

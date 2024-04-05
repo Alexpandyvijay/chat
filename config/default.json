@@ -1,3 +1,5 @@
 {
-    "port": 8080
+    "port": 8080,
+    "mongo_url": "mongodb+srv://alexpandyvijay:JZBWJisge50GPEXQ@cluster0.taksuik.mongodb.net/",
+    "jwt_secret_key": "generateAcessToken"
 }
