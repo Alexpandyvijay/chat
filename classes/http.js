@@ -1,10 +1,11 @@
-import AuthenticateAPI from './auth';
+import AuthenticateAPI from './auth.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import Mongodb from './mongo.js'
+import Mongodb from './mongo.js';
+import { fileURLToPath } from 'url';
 
 export default class HTTP extends AuthenticateAPI {
 
@@ -14,46 +15,42 @@ export default class HTTP extends AuthenticateAPI {
         this.response = response;
     }
 
-    static async setup(app, router) {
+    static async setup(app, router, express) {
 
+        app.use(cors());
         app.use(bodyParser.urlencoded({ extended: true }));
         app.use(bodyParser.json());
         app.use(express.json());
-        app.use(cors());
 
-        await prepareRouter(router);
+        await HTTP.prepareRouter(router);
 
-        const mongo = new Mongodb();
-
-        this.collections = mongo.collections;
-
-        app.use('/api/v1/',router);
+        app.use('/api/v1',router);
 
         app.use((req, res,) => {
             res.status(404).send('Not Found');
         });
     }
 
-    static execption({message, status}) {
+    execption({message, status}) {
         console.error(message);
         this.response.status(status).json({ message: 'false', error: message});
     }
 
-    async prepareRouter(router) {
+    static async prepareRouter(router) {
 
-        let map = await this.getRouterMap();
+        let map = await HTTP.getRouterMap();
 
         for(let [path, endpoint] of map.entries()) {
 
             router.all(path, (req, res) => {
-                this.initialize(req, res, endpoint);
+                HTTP.initialize(req, res, endpoint);
             });
         }
     }
 
-    async getRouterMap() {
+    static async getRouterMap() {
 
-        const filePaths = this.getRouter();
+        const filePaths = HTTP.getRouter();
 
         const endpoints = new Map();
 
@@ -63,7 +60,7 @@ export default class HTTP extends AuthenticateAPI {
 
             for (const key of Object.keys(module)) {
 
-                let endpoint = path.join(path.basename(filePath,'.js'), key.charAt(0).toLowerCase() + key.slice(1));
+                let endpoint = path.join('/',path.basename(filePath,'.js'), key.charAt(0).toLowerCase() + key.slice(1));
 
                 endpoints.set(endpoint, module[key]);
             }
@@ -72,9 +69,11 @@ export default class HTTP extends AuthenticateAPI {
         return endpoints;
     }
 
-    getRouter() {
+    static getRouter() {
 
-        const folderPath = path.join(__dirname, 'WWW');
+        const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+        const folderPath = path.join(__dirname,'..','www');
 
         const files = fs.readdirSync(folderPath);
 
@@ -83,22 +82,30 @@ export default class HTTP extends AuthenticateAPI {
         return filePaths;
     }
 
-    async initialize(req, res, endpoint) {
+    static async initialize(req, res, endpoint) {
 
         let route = new endpoint(req, res);
 
-       await this.verifyToken();
+        route.uploadMulter();
 
-        if(!typeof route.prototype.execute === 'function') {
-            HTTP.execption({message: "execute function missing....", status: 500});
+        if(!route.authExecption) {
+            await route.verifyToken();
+        }
+
+        if(!typeof route.execute === 'function') {
+            route.execption({message: "execute function missing....", status: 500});
         }
 
         let paramter = {
             ...req.query,
-            ...req.body
+            ...req.body,
         }
 
         let result = await route.execute(paramter);
+
+        if(!result) {
+            return;
+        }
 
         res.set('Content-Type', 'application/json');
         
@@ -106,5 +113,19 @@ export default class HTTP extends AuthenticateAPI {
             message: 'true',
             data: result
         });
+    }
+
+    uploadMulter() {
+
+        const storage = multer.diskStorage({
+            destination: function (req, file, cb) {
+              cb(null, 'uploads')
+            },
+            filename: function (req, file, cb) {
+              cb(null, Date.now() + '-' +file.originalname )
+            }
+        })
+          
+        this.upload = multer({ storage: storage }).single('image');
     }
 }

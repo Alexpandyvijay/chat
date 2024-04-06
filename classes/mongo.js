@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default class Mongodb {
 
-    collections = new Map();
+    static collections = new Map();
     static collectionSchema = new Map();
 
     static async setup() {
@@ -18,33 +18,46 @@ export default class Mongodb {
 
         Mongodb.createSchema();
 
-        connect(mongo_url,() => {
-            console.log('MongoDb cluster connected')
-        });
+        try {
+            await connect(mongo_url);
+            console.log('Db connected +++++++');
+        } catch(e) {
+            console.log('Db not connected >>>>>>')
+            console.error(e.message);
+            throw new Error(e.message);
+        }
+
+
     }
 
     static createSchema() {
 
         for(let [name, schema] of Mongodb.collectionSchema.entries()) {
-
-            this.collections.set(name, model(name, new Schema(schema)));
+            
+            Mongodb.collections.set(name, model(name, new Schema(schema)));
         }
     }
 }
 
 
-Mongodb.collections.set('user_password',{
+Mongodb.collectionSchema.set('user_auth',{
     userId: { type: String, default: uuidv4, unique: true },
     password: { type: String, required: true },
+    privilege: { type: String, default: null},
+    email: { type: String, required: true, unique: true },
 });
 
-Mongodb.collections.set('user_details',{
-    photo : { data : Buffer, contentType : String },
+Mongodb.collectionSchema.set('user_profile',{
+    userId: { type: String, required: true, unique: true },
+    photo : {
+        data: { type: Buffer, default: Buffer.from('default image data', 'base64') },
+        contentType: { type: String, default: 'image/png' }
+    },
     name: { type: String, required: true },
-    bio: { type: String },
-    phone: { type: String },
-    email: { type: String, required: true, unique: true },
-})
+    bio: { type: String, default: null },
+    phone: { type: String, default: null },
+    private_account: { type: Boolean, default: null }
+});
 
 
 
