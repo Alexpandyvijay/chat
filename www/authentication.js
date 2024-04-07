@@ -1,12 +1,25 @@
 import HTTP from '../classes/http.js';
 import { compare, hash } from 'bcrypt';
 import config from 'config';
+import { body, validationResult } from 'express-validator';
 
 export class Signin extends HTTP {
 
     authExecption = true;
 
+    static validation = [
+        body('email').isEmail().withMessage('Invalid email'),
+        body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
+    ];
+
     async execute({email, password}) {
+
+        const errors = validationResult(this.request);
+
+        if (!errors.isEmpty()) {
+            this.execption({message: errors.array(), status: 400});
+            return false;
+        }
 
         const user = await this.collections.get('user_auth')
         .findOne({email : email},{userId: 1, password: 1});
@@ -41,7 +54,20 @@ export class Signup extends HTTP {
 
     authExecption = true;
 
+    static validation = [
+        body('name').isLength({ min: 1 }).withMessage('Name is required'),
+        body('email').isEmail().withMessage('Invalid email'),
+        body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
+    ];
+
     async execute({email, password, name}) {
+
+        const errors = validationResult(this.request);
+
+        if (!errors.isEmpty()) {
+            this.execption({message: errors.array(), status: 400});
+            return false;
+        }
 
         const 
             UserAuth = this.collections.get('user_auth'),

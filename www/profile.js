@@ -4,6 +4,8 @@ import path from 'path';
 
 export class Get extends HTTP {
 
+    static validation = [];
+
    async execute({}) {
 
         const 
@@ -26,6 +28,8 @@ export class Get extends HTTP {
 }
 
 export class Update extends HTTP {
+
+    static validation = [];
 
     async execute({name, bio, phone, private_account, account_id}) {
 
@@ -94,6 +98,8 @@ export class Update extends HTTP {
 }
 
 export class List extends HTTP {
+
+    static validation = [];
 
     async execute({}) {
 

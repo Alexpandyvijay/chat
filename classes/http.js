@@ -4,7 +4,6 @@ import bodyParser from 'body-parser';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import Mongodb from './mongo.js';
 import { fileURLToPath } from 'url';
 
 export default class HTTP extends AuthenticateAPI {
@@ -18,9 +17,9 @@ export default class HTTP extends AuthenticateAPI {
     static async setup(app, router, express) {
 
         app.use(cors());
-        app.use(bodyParser.urlencoded({ extended: true }));
         app.use(bodyParser.json());
         app.use(express.json());
+        app.use(bodyParser.urlencoded({ extended: true }));
 
         await HTTP.prepareRouter(router);
 
@@ -42,7 +41,7 @@ export default class HTTP extends AuthenticateAPI {
 
         for(let [path, endpoint] of map.entries()) {
 
-            router.all(path, (req, res) => {
+            router.all(path,endpoint.validation,(req, res) => {
                 HTTP.initialize(req, res, endpoint);
             });
         }
@@ -98,7 +97,7 @@ export default class HTTP extends AuthenticateAPI {
 
         let paramter = {
             ...req.query,
-            ...req.body,
+            ...req.body
         }
 
         let result = await route.execute(paramter);
