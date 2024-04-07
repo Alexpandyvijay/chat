@@ -21,6 +21,7 @@ export default class AuthenticateAPI {
 
         if(!token) {
             this.response.status(400).json({ message: 'false', error: 'Unauthorized access'});
+            return false;
         }
         const secret = config.get('jwt_secret_key');
 
@@ -33,6 +34,9 @@ export default class AuthenticateAPI {
              this.user = await Mongodb.collections.get('user_auth').findOne({email: obj.email},{password: 0});
         } catch(e) {
             this.response.status(400).json({ message: 'false', error: e.message});
+            return false;
         }
+
+        return true;
     }
 }

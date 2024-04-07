@@ -88,7 +88,10 @@ export default class HTTP extends AuthenticateAPI {
         route.uploadMulter();
 
         if(!route.authExecption) {
-            await route.verifyToken();
+            let verify = await route.verifyToken();
+            if(!verify) {
+                return;
+            }
         }
 
         if(!typeof route.execute === 'function') {
