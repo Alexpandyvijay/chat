@@ -126,6 +126,6 @@ export default class HTTP extends AuthenticateAPI {
             }
         })
           
-        this.upload = multer({ storage: storage }).single('image');
+        this.upload = multer({ storage: storage }).single('photo');
     }
 }
