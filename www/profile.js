@@ -1,6 +1,7 @@
 import HTTP from '../classes/http.js';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 export class Get extends HTTP {
 
@@ -44,12 +45,12 @@ export class Update extends HTTP {
                     throw new Error(err);
                 }
 
+                const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
                 data.image = {
-                    data : fs.readFileSync(path.join(process.cwd(),'..',"/uploads/",this.request.file.filename)),
+                    data : fs.readFileSync(path.join(__dirname,'..',"/uploads/",this.request.file.filename)),
                     contentType : "image/png"
                 };
-
-                const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
                 const folderPath = path.join(__dirname,'..','uploads');
 
